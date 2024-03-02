@@ -83,6 +83,23 @@ public class Word{
 		return returnWord;
 	}
 
+	public Word increment(){
+		Word result = new Word();
+		result.copy(this);
+		//set the initial carry to be true
+		Bit carry = new Bit(true);
+		//for every bit
+		for(int i = 31; i >= 0; i--){
+			Bit bit = result.getBit(i);
+			//set the resulting bit to bit XOR carry
+			result.setBit(i, bit.xor(carry));
+			//set the carry out to bit AND carry
+			carry = bit.and(carry);
+		}
+		//return the resulting word
+		return result;
+	}
+
 	//toString method for word, prints words in the format: "f,t,f,t..."
 	public String toString(){
 		String wordstr = word[0].toString();
