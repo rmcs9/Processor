@@ -35,6 +35,18 @@ public class ALU{
 		boolean isSubtract = op[0].and(op[1].and(op[2].and(op[3]))).getValue();
 		//	0111 - multiply
 		boolean isMultiply = op[0].not().and(op[1].and(op[2].and(op[3]))).getValue();
+		//  0000 - equals
+		boolean isEquals = op[0].not().and(op[1].not()).and(op[2].not()).and(op[3].not()).getValue();
+		//  0001 - not equals
+		boolean isNotEquals = op[0].not().and(op[1].not()).and(op[2].not()).and(op[3]).getValue();
+		//  0010 - less than
+		boolean isLessThan = op[0].not().and(op[1].not()).and(op[2]).and(op[3].not()).getValue();
+		//  0011 - greater than or equal to
+		boolean isGTE = op[0].not().and(op[1].not()).and(op[2]).and(op[3]).getValue();
+		//  0100 - greater than
+		boolean isGreaterThan = op[0].not().and(op[1]).and(op[2].not()).and(op[3].not()).getValue();
+		//  less than or equal to
+		boolean isLTE = op[0].not().and(op[1]).and(op[2].not()).and(op[3]).getValue();
 		
 		Word copy1 = new Word(), copy2 = new Word();
 
@@ -81,6 +93,81 @@ public class ALU{
 		else if(isMultiply){
 			copy1.copy(op1); copy2.copy(op2);
 			res.copy(multiply(copy1, copy2));
+		}
+		else if(isEquals){
+			copy1.copy(op1); copy2.copy(op2);
+			Word subResult = subtract(copy1, copy2);
+			Bit val = new Bit(true);
+			for(int i = 0; i < 32; i++){
+				if(subResult.getBit(i).getValue()){
+					val.clear();
+				}	
+			}
+			res.copy(new Word());
+			res.setBit(0, val);
+		}
+		else if(isNotEquals){
+			copy1.copy(op1); copy2.copy(op2);
+			Word subResult = subtract(copy1, copy2);
+			Bit val = new Bit(false);
+			for(int i = 0; i < 32; i++){
+				if(subResult.getBit(i).getValue()){
+					val.set();
+				}	
+			}
+			res.copy(new Word());
+			res.setBit(0, val);
+
+		}
+		//< 
+		else if(isLessThan){
+			copy1.copy(op1); copy2.copy(op2);
+			Word subResult = subtract(copy1, copy2);
+			res.copy(new Word());
+			res.setBit(0, subResult.getBit(0));
+		}
+		//>=
+		else if(isGTE){
+			copy1.copy(op1); copy2.copy(op2);
+			Word subResult = subtract(copy1, copy2);
+			res.copy(new Word());
+			res.setBit(0, subResult.getBit(0).not());
+		}
+		//>
+		else if(isGreaterThan){
+			copy1.copy(op1); copy2.copy(op2);
+			Word subResult = subtract(copy1, copy2);
+			res.copy(new Word());
+			if(subResult.getBit(0).not().getValue()){
+				Bit val = new Bit(false);
+				for(int i = 0; i < 32; i++){
+					if(subResult.getBit(i).getValue()){
+						val.set();
+					}
+				}
+				res.setBit(0, val);
+			}
+			else{
+				res.setBit(0, new Bit(false));
+			}
+		}
+		//<=
+		else if(isLTE){
+			copy1.copy(op1); copy2.copy(op2);
+			Word subResult = subtract(copy1, copy2);
+			res.copy(new Word());
+			if(subResult.getBit(0).not().getValue()){
+				Bit val = new Bit(true);	
+				for(int i = 0; i < 32; i++){
+					if(subResult.getBit(i).getValue()){
+						val.clear();
+					}
+				}
+				res.setBit(0, val);
+			}
+			else{
+				res.setBit(0, new Bit(true));
+			}
 		}
 		else{
 			throw new RuntimeException("invalid operation");

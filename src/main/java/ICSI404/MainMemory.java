@@ -41,5 +41,10 @@ public class MainMemory{
 			}
 		}
 	} 
+
+	//FOR TESTING PURPOSES ONLY!!!!!
+	public static void clear(){
+		mem = new Word[1024];
+	}
 }
 

@@ -100,6 +100,22 @@ public class Word{
 		return result;
 	}
 
+	public Word decrement(){
+		Word result = new Word();
+		result.copy(this);
+		for(int i = 31; i >= 0; i--){
+			Bit bit = result.getBit(i);
+			if(bit.not().getValue()){
+				result.setBit(i, new Bit(true));
+			}
+			else{
+				result.setBit(i, new Bit(false));
+				return result;
+			}
+		}
+		return result;
+	}
+
 	//toString method for word, prints words in the format: "f,t,f,t..."
 	public String toString(){
 		String wordstr = word[0].toString();

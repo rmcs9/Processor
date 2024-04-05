@@ -241,5 +241,10 @@ public class Assignment2Tests{
 		alu.op2.set(-789);
 		alu.doOperation(multOp);
 		assertEquals(18506784, alu.res.getSigned());
+
+		alu.op1.set(64);
+		alu.op2.set(2);
+		alu.doOperation(multOp);
+		assertEquals(128, alu.res.getSigned());
 	}
 }
