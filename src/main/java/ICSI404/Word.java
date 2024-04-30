@@ -208,11 +208,28 @@ public class Word{
 			word[0] = new Bit(true);
 		}
 	}
+
+	public Bit isEquals(Word other){
+		for(int i = 0; i < 32; i++){
+			if(this.getBit(i).xor(other.getBit(i)).getValue()){
+				return new Bit(false);
+			}
+		}
+		return new Bit(true);
+	}
+
 	//my constructor for words, initializes a new Word to all false bits
 	public Word(){
 		for(int i = 0; i < 32; i++){
 			word[i] = new Bit(false);
 		}
+	}
+
+	public Word(int num){
+		for(int i = 0; i < 32; i++){
+			word[i] = new Bit(false);
+		}
+		this.set(num);
 	}
 
 }

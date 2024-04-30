@@ -50,6 +50,14 @@ public class ALU{
 		
 		Word copy1 = new Word(), copy2 = new Word();
 
+		//INCREASE CLOCK CYCLES
+		if(isMultiply){
+			Processor.clockCycles += 10;
+		}
+		else{
+			Processor.clockCycles += 2;
+		}
+
 		if(isAnd){
 			res.copy(op1.and(op2));
 		}

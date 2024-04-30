@@ -32,6 +32,8 @@ public class Processor{
 	private Word functionMask;
 	private Word immediateMask;
 
+	public static int clockCycles;
+
 
 	public Processor(){
 		PC = new Word();
@@ -62,6 +64,10 @@ public class Processor{
 		for(int i = 0; i < 27; i++){
 			immediateMask.setBit(i, new Bit(true));
 		}
+
+		//RESET CLOCK CYCLE COUNT
+		System.out.println("CYCLES RESET");
+		Processor.clockCycles = 0;
 	}
 
 	public void run(){
@@ -75,7 +81,7 @@ public class Processor{
 
 	private void fetch(){
 		//set the current intruction
-		currentInstruction = MainMemory.read(PC);		
+		currentInstruction = InstructionCache.read(PC);		
 		//advance the program counter
 		PC = PC.increment();
 	}
@@ -116,6 +122,13 @@ public class Processor{
 			rs1val.copy(registers[findRegIndex(rs1)]);
 			//set the immediate value
 			immediate = currentInstruction.and(immediateMask).rightShift(24);
+			//if the most signifigant bit of the this immediate value is set...
+			//sign extend the immediate value
+			if(immediate.getBit(24).getValue()){
+				for(int i = 0; i < 24; i++){
+					immediate.setBit(i, new Bit(true));
+				}
+			}
 		}
 		//2r
 		else if(twoR.getValue()){
@@ -132,6 +145,14 @@ public class Processor{
 			rs2val.copy(registers[findRegIndex(rs2)]);
 			//set the immediate value
 			immediate = currentInstruction.and(immediateMask).rightShift(19);
+			//if the most signifigant bit of this immediate is set
+			//sign extend the immediate
+			if(immediate.getBit(19).getValue()){
+				for(int i = 0; i < 19; i++){
+					immediate.setBit(i, new Bit(true));
+				}
+			}
+				
 		}
 		//Dest only (1r)
 		else if(destOnly.getValue()){
@@ -143,6 +164,14 @@ public class Processor{
 			func = currentInstruction.and(functionMask).rightShift(10);
 			//set the immediate value
 			immediate = currentInstruction.and(immediateMask).rightShift(14);
+			//if the most signifigant bit of the immediate is set,
+			//sign extend the immediate value
+			if(immediate.getBit(14).getValue()){
+				for(int i = 0; i < 14; i++){
+					immediate.setBit(i, new Bit(true));
+				}
+			}
+
 		}
 		//no r (0r)
 		else if(noR.getValue()){
@@ -150,6 +179,13 @@ public class Processor{
 			opCode = currentInstruction.and(fiveBitMask);
 			//set the immediate value
 			immediate = currentInstruction.and(immediateMask).rightShift(5);
+			//if the most signifigant bit of the immediate is set,
+			//sign extend the immediate value
+			if(immediate.getBit(5).getValue()){
+				for(int i = 0; i < 5; i++){
+					immediate.setBit(i, new Bit(true));
+				}
+			}
 		}
 	}
 
@@ -203,6 +239,7 @@ public class Processor{
 			else{
 				//set the halt bit
 				isHalted.set();	
+				System.out.println("Clock cycles: " + clockCycles);
 			}
 		}
 		//BRANCH 001
@@ -479,32 +516,32 @@ public class Processor{
 				registers[findRegIndex(rd)].copy(alu.res);
 			}
 			//DEBUG INFORMATION:
-			String operation;
-			String regvals;
-			switch(opCode.getSigned()){
-				case 2:
-					operation = "MATH 3R ";
-					regvals = "r" + rs1.getSigned() + " val: " + rs1val.getSigned() + ", " + 
-						"r" + rs2.getSigned() + " val: " + rs2val.getSigned() + ", " + "rd: " + rd.getSigned() +
-						" rd value: " + registers[rd.getSigned()].getSigned();
-						System.out.println(operation + regvals);
-				break;
-				case 3:
-					operation = "MATH 2R ";
-					regvals = "r" + rs2.getSigned() + " val: " + rs2val.getSigned() + ", " +
-						"rd: " + rd.getSigned() + " rdval: " + registers[rd.getSigned()].getSigned();
-					System.out.println(operation + regvals);
-				break;
-				case 1:
-					operation = "MATH DEST ONLY ";
-					regvals = "imm: " + immediate.getSigned() + ", rd: " + rd.getSigned() + " val: " + 
-							registers[rd.getSigned()].getSigned();
-					System.out.println(operation + regvals);
-				break;
-				case 0:
-					operation = "MATH HALT";
-				break;
-			}
+			// String operation;
+			// String regvals;
+			// switch(opCode.getSigned()){
+			// 	case 2:
+			// 		operation = "MATH 3R ";
+			// 		regvals = "r" + rs1.getSigned() + " val: " + rs1val.getSigned() + ", " + 
+			// 			"r" + rs2.getSigned() + " val: " + rs2val.getSigned() + ", " + "rd: " + rd.getSigned() +
+			// 			" rd value: " + registers[rd.getSigned()].getSigned();
+			// 			System.out.println(operation + regvals);
+			// 	break;
+			// 	case 3:
+			// 		operation = "MATH 2R ";
+			// 		regvals = "r" + rs2.getSigned() + " val: " + rs2val.getSigned() + ", " +
+			// 			"rd: " + rd.getSigned() + " rdval: " + registers[rd.getSigned()].getSigned();
+			// 		System.out.println(operation + regvals);
+			// 	break;
+			// 	case 1:
+			// 		operation = "MATH DEST ONLY ";
+			// 		regvals = "imm: " + immediate.getSigned() + ", rd: " + rd.getSigned() + " val: " + 
+			// 				registers[rd.getSigned()].getSigned();
+			// 		System.out.println(operation + regvals);
+			// 	break;
+			// 	case 0:
+			// 		operation = "MATH HALT";
+			// 	break;
+			// }
 		}
 		//BRANCH STORES 001
 		else if(opCode.getBit(27).not().and(opCode.getBit(28).not()).and(opCode.getBit(29)).getValue()){
@@ -559,22 +596,22 @@ public class Processor{
 			}
 			//3R, 2R, 1R
 			else{
-				registers[findRegIndex(rd)].copy(MainMemory.read(alu.res));
+				registers[findRegIndex(rd)].copy(L2Cache.read(alu.res));
 			}
 		}
 		//STORE STORES 101
 		else if(opCode.getBit(27).and(opCode.getBit(28).not()).and(opCode.getBit(29)).getValue()){
 			//3R
 			if(opCode.getBit(30).and(opCode.getBit(31).not()).getValue()){
-				MainMemory.write(alu.res, registers[findRegIndex(rs2)]);
+				L2Cache.write(alu.res, registers[findRegIndex(rs2)]);
 			}
 			//2R
 			else if(opCode.getBit(30).and(opCode.getBit(31)).getValue()){
-				MainMemory.write(alu.res, registers[findRegIndex(rs2)]);
+				L2Cache.write(alu.res, registers[findRegIndex(rs2)]);
 			}
 			//DEST ONLY
 			else if(opCode.getBit(30).not().and(opCode.getBit(31)).getValue()){
-				MainMemory.write(registers[findRegIndex(rd)], immediate);
+				L2Cache.write(registers[findRegIndex(rd)], immediate);
 			}
 			//NO R
 			//UNUSED
@@ -583,11 +620,11 @@ public class Processor{
 		else if(opCode.getBit(27).and(opCode.getBit(28)).and(opCode.getBit(29).not()).getValue()){
 			//3R
 			if(opCode.getBit(30).and(opCode.getBit(31).not()).getValue()){
-				registers[findRegIndex(rd)].copy(MainMemory.read(alu.res));
+				registers[findRegIndex(rd)].copy(L2Cache.read(alu.res));
 			}
 			//2R
 			else if(opCode.getBit(30).and(opCode.getBit(31)).getValue()){
-				registers[findRegIndex(rd)].copy(MainMemory.read(alu.res));
+				registers[findRegIndex(rd)].copy(L2Cache.read(alu.res));
 			}
 			//DEST ONLY
 			else if(opCode.getBit(30).not().and(opCode.getBit(31)).getValue()){
@@ -603,14 +640,14 @@ public class Processor{
 		//decrement the stack pointer
 		SP = SP.decrement();
 		//write the requested word at the new top of the stack
-		MainMemory.write(SP, val);
+		L2Cache.write(SP, val);
 	}
 
 	private Word pop(){
 		//read the word at the top of the stack
-		Word pop = MainMemory.read(SP);
+		Word pop = L2Cache.read(SP);
 		//erase what was on top of the stack
-		MainMemory.write(SP, new Word());
+		L2Cache.write(SP, new Word());
 		//increment the stack pointer
 		SP.increment();
 		//return what was on top of the stack
