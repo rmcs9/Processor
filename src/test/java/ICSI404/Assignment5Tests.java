@@ -463,6 +463,7 @@ public class Assignment5Tests{
 		Word addr = new Word();
 		addr.set(1023);
 		assertEquals(2, MainMemory.read(addr).getSigned());
+		MainMemory.clear();
 	}
 
 	@Test
